@@ -1,0 +1,78 @@
+module DSP48A1_tb ();
+reg[17:0]A,B,D;
+reg[7:0]OPMODE;
+reg[17:0]BCIN;
+reg[47:0]C,PCIN;
+reg CARRYIN,CLK,CEA,CEB,CEC,CECARRYIN,CED,CEM,CEOPMODE,CEP,RSTA,RSTB,RSTC,RSTCARRYIN,RSTD,RSTM,RSTOPMODE,RSTP;
+wire[47:0]PCOUT,P;
+wire[17:0]BCOUT;
+wire[35:0]M;
+wire CARRYOUT,CARRYOUTF;
+
+
+initial begin
+ CLK=0;
+ forever
+   #1 CLK=~CLK;
+end
+
+DSP48A1 dut(A,B,C,D,CARRYIN,BCIN,M,P,CARRYOUT,CARRYOUTF,CLK,OPMODE,CEA,CEB,CEC,CECARRYIN,CED,CEM,CEOPMODE,CEP,RSTA,RSTB,RSTC,RSTCARRYIN,RSTD,RSTM,RSTOPMODE,RSTP,BCOUT,PCIN,PCOUT);
+
+initial begin
+{A,B,D,OPMODE,BCIN,C,PCIN,CARRYIN,CEA,CEB,CEC,CECARRYIN,CED,CEM,CEOPMODE,CEP,RSTA,RSTB,RSTC,RSTCARRYIN,RSTD,RSTM,RSTOPMODE,RSTP}=0;
+@(negedge CLK);
+//clk enable effect
+{CEA,CEB,CEC,CECARRYIN,CED,CEM,CEOPMODE,CEP}=8'b00000000;
+repeat(10)
+@(negedge CLK);
+
+//rst effect
+{CEA,CEB,CEC,CECARRYIN,CED,CEM,CEOPMODE,CEP}=8'b11111111;
+{RSTA,RSTB,RSTC,RSTCARRYIN,RSTD,RSTM,RSTOPMODE,RSTP}=8'b11111111;
+A=$random;
+B=$random;
+D=$random;
+OPMODE=$random;
+BCIN=$random;
+C=$random;
+PCIN=$random;
+CARRYIN=$random;
+repeat(10)
+@(negedge CLK);
+
+//OPMODE effect
+{CEA,CEB,CEC,CECARRYIN,CED,CEM,CEOPMODE,CEP}=8'b11111111;
+{RSTA,RSTB,RSTC,RSTCARRYIN,RSTD,RSTM,RSTOPMODE,RSTP}=8'b00000000;
+//value examples
+A=24;
+B=35;
+D=56;
+BCIN=1;
+C=1463;
+PCIN=1238;
+CARRYIN=1;
+OPMODE=8'b11111101;
+//P=Z(C)-(X((B-D)*A)+CIN)
+repeat(10)
+@(negedge CLK);
+
+OPMODE=8'b01111111;
+//P=Z(C)+(X(concatenation result)+CIN)
+repeat(10)
+@(negedge CLK);
+
+OPMODE=8'b01001101;
+//P=Z(C)+(X(B*A)+CIN(0))
+repeat(10)
+@(negedge CLK);
+
+//testing carryout
+OPMODE=8'b00111110;
+C=48'hffffffffffff;
+//P=Z(C)+(X((B+D)*A)+CIN(1))
+repeat(10)
+@(negedge CLK);
+
+$stop;
+end
+endmodule
